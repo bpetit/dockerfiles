@@ -1,9 +1,5 @@
 FROM bpetit/base:latest
 MAINTAINER Benoit Petit <bpetit@learneth.fr>
-# are you root ?
-USER root
-# set the container up to date
-RUN apt-get update && apt-get upgrade -y
 # install nsd
 RUN apt-get install nsd dnstop -y
 RUN wget https://gist.githubusercontent.com/bpetit/b385173238e402ed0a9f/raw/283a2c4f471c014a868947b1ab87890792dcde18/nsd.conf -O /etc/nsd/nsd.conf.d/mysample.conf
