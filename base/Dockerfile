@@ -19,4 +19,12 @@ RUN cp /root/.vimrc /etc/vim/vimrc
 RUN wget https://gist.githubusercontent.com/bpetit/b385173238e402ed0a9f/raw/0aee6e11ed902717dece39911f77ad4b7640d6fc/sshd_config_dummy -O /etc/ssh/sshd_config
 RUN makepasswd --minchars 10 --maxchars 30 > /root/default-passwd
 RUN echo root:$(cat /root/default-passwd) | chpasswd
-ONBUILD /etc/init.d/ssh start
+RUN mkdir /var/run/sshd
+# prepare supervisord to run services
+RUN apt-get install supervisor -y
+RUN wget https://gist.githubusercontent.com/bpetit/b385173238e402ed0a9f/raw/54296b8b254e84360293f484a4fcfc49058cc17d/supervisord.conf -O /etc/supervisor/conf.d/supervisord.conf
+# add ssh to services to run
+RUN echo '[program:sshd]' >> /etc/supervisor/conf.d/supervisord.conf
+RUN echo 'command=/usr/sbin/sshd -D -f /etc/ssh/sshd_config' >> /etc/supervisor/conf.d/supervisord.conf
+EXPOSE 22
+CMD echo "random initial root passwd: $(cat /root/default-passwd)" && /usr/bin/supervisord
