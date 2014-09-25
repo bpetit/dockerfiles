@@ -27,4 +27,7 @@ RUN wget https://gist.githubusercontent.com/bpetit/b385173238e402ed0a9f/raw/5429
 RUN echo '[program:sshd]' >> /etc/supervisor/conf.d/supervisord.conf
 RUN echo 'command=/usr/sbin/sshd -D -f /etc/ssh/sshd_config' >> /etc/supervisor/conf.d/supervisord.conf
 EXPOSE 22
-CMD echo "random initial root passwd: $(cat /root/default-passwd)" && /usr/bin/supervisord
+RUN echo '#!/bin/bash' > /root/init-passwd.sh
+RUN echo 'makepasswd --minchars 10 --maxchars 30 > /root/default-passwd && echo "random initial root passwd: $(cat /root/default-passwd)" && echo root:$(cat /root/default-passwd) | chpasswd' >> /root/init-passwd.sh
+ONBUILD RUN bash /root/init-passwd.sh
+CMD bash /root/init-passwd.sh && /usr/bin/supervisord
