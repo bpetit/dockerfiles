@@ -30,4 +30,4 @@ EXPOSE 22
 RUN echo '#!/bin/bash' > /root/init-passwd.sh
 RUN echo 'makepasswd --minchars 10 --maxchars 30 > /root/default-passwd && echo "random initial root passwd: $(cat /root/default-passwd)" && echo root:$(cat /root/default-passwd) | chpasswd' >> /root/init-passwd.sh
 ONBUILD RUN bash /root/init-passwd.sh
-CMD bash /root/init-passwd.sh && /usr/bin/supervisord
+CMD /usr/bin/supervisord
