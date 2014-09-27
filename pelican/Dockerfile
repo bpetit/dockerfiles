@@ -13,7 +13,7 @@ RUN chown -R git:git /var/www/cache
 RUN mkdir /srv/git/.ssh
 RUN mkdir /srv/git/blog.git
 RUN git init --bare /srv/git/blog.git
-RUN echo "#!/bin/bash\nGIT_WORK_TREE=$BLOG_DIR/content git checkout -f\npelican -s $BLOG_DIR -o $BLOG_DIR/output $BLOG_DIR" >> /srv/git/blog.git/hooks/post-receive
+RUN echo "#!/bin/bash\nGIT_WORK_TREE=$BLOG_DIR/content git checkout -f\npelican $BLOG_DIR/content -o $BLOG_DIR/output -s $BLOG_DIR/pelicanconf.py" >> /srv/git/blog.git/hooks/post-receive
 RUN chmod +x /srv/git/blog.git/hooks/post-receive
 RUN chown -R git:git /srv/git/
 RUN usermod -a -G www-data git
