@@ -1,0 +1,192 @@
+""" General
+set nocompatible            " No compatible mode with the old Vi
+filetype plugin indent on   " Useful plugins
+set history=2000              " keeps 20 commands in mind (q:)
+set encoding=utf-8          " Specify the utf-8 encoding
+set fileencodings=ucs-bom,utf-8,latin1 " Allows encoding detection
+set swapfile                " Set on the swap file useful for recovery
+syntax on
+""" Interface
+syntax on                   " Color syntax for numerous languages
+set number                  " Display line number
+set tabpagemax=50           " Vim can open up to 50 tabs
+" Check if GUI Vim is running.
+if has("gui_running")
+  "colorscheme desert        " Gui theme setting
+  set guifont=Terminus\ 11  " Gui font setting
+  set lines=53 columns=84   " Initial Size of GUI
+  set go-=T " Compact GUI
+  let &guicursor = &guicursor . ",a:blinkon0"
+else
+  set t_Co=8
+  colorscheme desert
+  highlight clear
+  "highlight CursorLine ctermbg=black
+endif
+
+if has("autocmd")
+  " When editing a file, always jump to the last cursor position
+  autocmd BufReadPost *
+  \ if line("'\"") > 0 && line ("'\"") <= line("$") |
+  \   exe "normal! g'\"" |
+  \ endif
+endif
+
+set numberwidth=3           " Minimal number of columns of the line number
+set wildmode=list:longest,full " Autocompletion settings
+" Status info
+set showcmd                 " Useful live command status
+set ruler                   " Useful highlightned status line
+set laststatus=2            " Always displays the status
+
+""" Keyboard / Mouse
+set backspace=2             " Compatibility mode for the OS X bs behavior
+set mouse=n                 " Mouse management
+
+""" Editing
+" Spelling
+"set spelllang=fr
+"set spellsuggest=best,10
+"set spl=fr
+" Indentation
+set autoindent              " Autoindentation refering to the previous line
+set smartindent             " Syntax auto indent, ie following braces...
+" Tab
+set expandtab               " Tabs with spaces, not tabs
+set smarttab                " After a blank line, reset the autoindentation
+set softtabstop=2           " One tab equals to two spaces
+set shiftwidth=2            " Same as above (may be redundant)
+" Special chars
+set list                    " Shows trailing chars
+set listchars=tab:\ \ ,trail:.  " How special blank chars are displayed
+set showbreak=>>\ 
+" Search
+"set hlsearch                " Highlight the searched term
+set incsearch               " Incremental search
+set ignorecase              " Need to be explain?
+set smartcase               " Override above if an Uppercase is supplied
+" Completion
+set completeopt=longest,menu,preview " Brings a cool completion view
+" Sessions
+set viewdir=$HOME/.vim/views
+
+set paste
+
+""" Keyboard shortcuts
+" Buffer browsing
+noremap <C-o> :Ex<CR>
+map <F2> :tabprevious<CR>
+map <F3> :tabnext<CR>
+map <silent> <F4> :exe "silent! tabmove " . (tabpagenr() - 2)<CR>
+map <silent> <F5> :exe "silent! tabmove " . tabpagenr()<CR>
+map <F6> :match ErrorMsg /\%>80v.\+/<CR>
+map <F7> :match Normal /\%>80v.\+/<CR>
+map <F9> :set paste<CR>
+map <F10> :set nopaste<CR>
+" window min height
+set wmh=0
+" Buffer listing menu...
+set wildcharm=<C-Z>
+" ... accessible by ',,' in Normal Mode
+nnoremap ,, :b <C-Z>
+""" Auto brackets
+inoremap (( ()<Esc>i
+inoremap [[ []<Esc>i
+inoremap {{ {}<Esc>i
+inoremap "" ""<Esc>i
+vnoremap " <Esc>`>a"<Esc>`<i"<Esc>
+inoremap '' ''<Esc>i
+inoremap `` ``<Esc>i
+inoremap <C-_> ____________________________________________________________________________<Esc>o
+vnoremap ' <Esc>`>a'<Esc>`<i'<Esc>
+""" Auto tags
+inoremap << <><Esc>i
+inoremap <buffer> </ </<C-x><C-o><Esc>a
+inoremap <buffer> <!D <!D<C-x><C-o>
+inoremap <buffer> <!- <!--<Space><Space>--><Esc>3hi
+"
+" Toggle open/close fold with f/F/^F
+nnoremap f za
+nnoremap F zR
+nnoremap <C-f> zM
+"
+" -----------------------------------------------------------------------------
+"  FileType aware setup
+autocmd FileType python :call SetupPython()
+autocmd FileType python :highlight LineNr ctermfg=Yellow
+
+let g:tex_flavor='latex'
+autocmd FileType latex,tex :call SetupTex()
+
+
+" -----------------------------------------------------------------------------
+" MODELINE
+" Append modeline after last line in buffer.
+" Use substitute() (not printf()) to handle '%%s' modeline in LaTeX files.
+function! AppendModeline()
+  let save_cursor = getpos('.')
+  let append = ' vim: set ts='.&tabstop.' sw='.&shiftwidth.' tw='.&textwidth.' sts='.&softtabstop.' '
+  $put =substitute(&commentstring, '%s', append, '')
+  call setpos('.', save_cursor)
+endfunction
+
+" -----------------------------------------------------------------------------
+"  TABLINE SETUP
+function! ShortTabLine()
+    let ret = ''
+    for i in range(tabpagenr('$'))
+  "Select the color group for highlighting active tab
+  if i + 1 == tabpagenr()
+      let ret .= '%#errorMsg#'
+  else
+      let ret .= '%#TabLine#'
+  endif
+
+  "Find the buffername for the tablabel
+  let buflist = tabpagebuflist(i+1)
+  let winnr = tabpagewinnr(i+1)
+  let buffername = bufname(buflist[winnr - 1])
+  let filename = fnamemodify(buffername, ':t')
+  "Check if there is no name
+  if filename == ''
+      let filename = 'noname'
+  endif
+  if strlen(filename) >= 8
+      let ret .= '['.filename[0:4].'..]'
+  else
+      let ret .= '['.filename.']'
+  endif
+    endfor
+
+    "After the last tab fill with TabLineFill and reset tab page #
+    let ret .= '%#TabLineFill#%T'
+    return ret
+endfunction
+
+set tabline=%!ShortTabLine()
+
+" -----------------------------------------------------------------------------
+"  PYTHON SETUP
+function! SetupPython()
+  set iskeyword+=.
+  set tabstop=4
+  set softtabstop=4
+  set shiftwidth=4
+  set textwidth=79
+  set foldmethod=indent
+  set t_Co=256
+  set omnifunc=pythoncomplete#Complete
+  set cot=menu
+  set number
+  set foldtext=FoldingAspect()
+  " Execute file being edited with <Shift> + e:
+  map <buffer> <S-e> :w<CR>:!/usr/bin/env python % <CR>
+endfunction
+
+" -----------------------------------------------------------------------------
+"  LATEX SETUP
+function! SetupTex()
+  set textwidth=80
+  set wrap
+  setlocal spell spelllang=fr
+endfunction
